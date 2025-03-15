@@ -1,47 +1,39 @@
-# Run this app with `python app.py` and
-# visit http://127.0.0.1:8050/ in your web browser.
-
+import pandas
 from dash import Dash, html, dcc
-import plotly.express as px
-import pandas as pd
 
-app = Dash(__name__)
+from plotly.express import line
 
-# Load the processed data
-df = pd.read_csv('processeddata.csv')
+# the path to the formatted data file
+DATA_PATH = "./processeddata.csv"
 
-# Convert the 'Sales' column from string to numeric by removing '$' and converting to float
-df['Sales'] = df['Sales'].str.replace('$', '').astype(float)
+# load in data
+data = pandas.read_csv(DATA_PATH)
+data = data.sort_values(by="Date")
 
-# Convert 'Date' to datetime for proper sorting
-df['Date'] = pd.to_datetime(df['Date'])
+# initialize dash
+dash_app = Dash(__name__)
 
-# Sort by date
-df = df.sort_values('Date')
-
-# Create the line chart
-fig = px.line(
-    df, 
-    x='Date', 
-    y='Sales', 
-    color='Region',
-    title='Pink Morsel Sales Over Time',
-    markers=True,
-    labels={
-        'Date': 'Date',
-        'Sales': 'Sales Amount ($)',
-        'Region': 'Region'
-    }
+# create the visualization
+line_chart = line(data, x="Date", y="Sales", title="Pink Morsel Sales")
+visualization = dcc.Graph(
+    id="visualization",
+    figure=line_chart
 )
 
-app.layout = html.Div(children=[
-    html.H1(children='Soul Foods Sales Analysis Dashboard'),
-    
-    dcc.Graph(
-        id='sales-time-graph',
-        figure=fig
-    )
-])
+# create the header
+header = html.H1(
+    "Pink Morsel Visualizer",
+    id="header"
+)
 
+# define the app layout
+dash_app.layout = html.Div(
+    [
+        header,
+        visualization
+    ]
+)
+
+# this is only true if the module is executed as the program entrypoint
 if __name__ == '__main__':
-    app.run(debug=True)
+    dash_app.run_server()
